@@ -1,7 +1,5 @@
 from Solver.solverSCP import solverSCP
 from Solver.solverSCP_ChaoticMaps import solverSCP_ChaoticMaps
-from Solver.solverKP_ChaoticMaps import solverKP_ChaoticMaps
-from Solver.solverKP import solverKP
 
 from BD.sqlite import BD
 import json
@@ -63,19 +61,6 @@ while len(data) > 0:
             solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, ds, repair, parMH)
         else:
             solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
-        
-    if problema == 'KP':
-        bd.actualizarExperimento(id, 'ejecutando')
-        ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[0])
-        ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[1])
-        
-        parMH = parametrosMH.split(",")[3]
-        separacion = ds[1].split("_")
-        
-        if len(separacion) > 1:
-            solverKP_ChaoticMaps(id, mh, maxIter, pop, instancia, ds, parMH)
-        else:
-            solverKP(id, mh, maxIter, pop, instancia, ds, parMH)
         
     data = bd.obtenerExperimento()
     
