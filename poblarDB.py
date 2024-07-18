@@ -40,7 +40,7 @@ paramsML = json.dumps({
 if scp:
     # poblar ejecuciones SCP
     instancias = bd.obtenerInstancias(f'''
-                                      "scp41","scp61","scpb1","scpnrf1"
+                                      "scpcyc06","scpcyc07","scpclr10","scpclr11","scp41","scp61","scpb1","scpnrf1"
                                       ''')
     iteraciones = 500
     experimentos = 5
@@ -49,9 +49,8 @@ if scp:
 
         for mh in mhs:
             binarizaciones = ['V3-STD','V3-STD_LOG','V3-STD_PIECE','V3-STD_SINE','V3-STD_SINGER','V3-STD_SINU','V3-STD_TENT','V3-STD_CIRCLE',
-                              'V3-COM','V3-COM_LOG','V3-COM_PIECE','V3-COM_SINE','V3-COM_SINGER','V3-COM_SINU','V3-COM_TENT','V3-COM_CIRCLE',
                               'V3-ELIT','V3-ELIT_LOG','V3-ELIT_PIECE','V3-ELIT_SINE','V3-ELIT_SINGER','V3-ELIT_SINU','V3-ELIT_TENT','V3-ELIT_CIRCLE']
-            # binarizaciones = ['V3-ELIT_LOG']
+            # binarizaciones = ['V3-ELIT']
             for binarizacion in binarizaciones:
                 
                 data = {}
