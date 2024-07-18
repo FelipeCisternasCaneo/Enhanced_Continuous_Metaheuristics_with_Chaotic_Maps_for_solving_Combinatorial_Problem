@@ -7,10 +7,11 @@ from scipy.stats import mannwhitneyu
 from util import util
 from BD.sqlite import BD
 bd = BD()
-tablas = False
-graficos = False
-diversidad = False
-testEstadistico = True
+tablas          = True
+graficos        = False
+diversidad      = False
+testEstadistico = False
+todos           = False
 dirResultado = './Resultados/'
 
 instancias = bd.obtenerInstanciasEjecutadas('SCP')
@@ -23,14 +24,14 @@ if tablas:
     archivoResumenFitness.write(',')
 
     for instancia in instancias:
-        archivoResumenFitness.write(f' ,{instancia[0]}, ,')
+        archivoResumenFitness.write(f' ,{instancia[0]}, , ,')
 
     archivoResumenFitness.write(' \n')
 
     archivoResumenFitness.write('experiment ')
 
     for instancia in instancias:
-        archivoResumenFitness.write(f',best, avg. , RPD')
+        archivoResumenFitness.write(f',best, avg. , std-dev, RPD')
 
     archivoResumenFitness.write(' \n')
 
@@ -78,8 +79,8 @@ if tablas:
                     exploracion.append(np.round(np.mean(xpl), decimals=2))
                     explotacion.append(np.round(np.mean(xpt), decimals=2))
                     tiempos.append(tiempo_ejecucion)
-                
-                    if diversidad:
+                    
+                    if todos:
                         
                         if not os.path.exists(f'{dirResultado}/Graficos/SCP/{experimento[0]}/{instancia[0]}'):
                             os.makedirs(f'{dirResultado}/Graficos/SCP/{experimento[0]}/{instancia[0]}')
@@ -96,135 +97,102 @@ if tablas:
                         print(f'Grafico de exploracion y explotacion realizado para {experimento[0]}, id: {id}, instancia: {instancia[0]}')
                     
                     os.remove('./Resultados/Transitorio/'+nombre_archivo+'.csv')
+                    
                 
                 rpd = np.round( ( (100 * ( np.min(rendimiento) - optimo ) ) / optimo), 3 )
                 
-                archivoResumenFitness.write(f',{np.min(rendimiento)},{np.round(np.average(rendimiento),3)},{rpd}')
+                archivoResumenFitness.write(f',{np.min(rendimiento)},{np.round(np.average(rendimiento),3)},{np.round(np.std(rendimiento),3)},{rpd}')
 
             archivoResumenFitness.write(' \n')
 
     archivoResumenFitness.close()
-    
+
+if diversidad: 
+    esquemas = ['STD','COM','ELIT']
+    for esquema in esquemas:
+        for mh in mhs:
+            experimentos = bd.obtenerExperimentosEspecial('SCP', mh[0], esquema)
+            for instancia in instancias:
+                if not os.path.exists(f'{dirResultado}/Graficos/SCP/{instancia[0]}/{mh[0]}'):
+                    os.makedirs(f'{dirResultado}/Graficos/SCP/{instancia[0]}/{mh[0]}')
+                figSTD, axSTD = plt.subplots()
+                noGraficar = False
+                for experimento in experimentos:
+                    mejor = bd.obtenerMejoresEjecucionesSCP(instancia[0], mh[0], experimento[0])
+                    print(f'Analizando experimento {experimento[0]} asociado a la instancia {instancia[0]} metaheuristica {mh[0]}')
+                    for m in mejor:
+                        id                  = m[0]
+                        nombre_archivo      = m[2]
+                        archivo             = m[3]
+                        direccionDestiono = './Resultados/Transitorio/'+nombre_archivo+'.csv'
+                        # print("-------------------------------------------------------------------------------")
+                        util.writeTofile(archivo,direccionDestiono)                        
+                        data = pd.read_csv(direccionDestiono, on_bad_lines='skip')
+                        if len(data['iter']) == 501:
+                            iteraciones = data['iter']
+                            fitness     = data['fitness']
+                            time        = data['time']
+                            xpl         = data['XPL']
+                            xpt         = data['XPT']
+
+                            figPER, axPER = plt.subplots()
+                            axPER.plot(iteraciones, xpl, color="r", label=r"$\overline{XPL}$"+": "+str(np.round(np.mean(xpl), decimals=2))+"%")
+                            axPER.plot(iteraciones, xpt, color="b", label=r"$\overline{XPT}$"+": "+str(np.round(np.mean(xpt), decimals=2))+"%")
+                            axPER.set_title(f'XPL% - XPT% {mh[0]} {experimento[0].split("-")[1]} {instancia[0]}')
+                            axPER.set_ylabel("Percentage")
+                            axPER.set_xlabel("Iteration")
+                            axPER.legend(loc = 'upper right')
+                            plt.savefig(f'{dirResultado}/Graficos/SCP/{instancia[0]}/{mh[0]}/Percentage_{experimento[0]}.pdf')
+                            plt.close('all')
+                            print(f'Grafico de exploracion y explotacion realizado para {experimento[0]}, id: {id}, instancia: {instancia[0]}')
+                            
+                        os.remove('./Resultados/Transitorio/'+nombre_archivo+'.csv')
+
 if graficos:
     iteraciones     = []
-    rendimientos    = dict()
-    if not os.path.exists(f'{dirResultado}/Best/SCP'):
-        os.makedirs(f'{dirResultado}/Best/SCP')    
-    for mh in mhs:
-        experimentos = bd.obtenerExperimentosEspecial('SCP', mh[0], 'STD')
-        for instancia in instancias:
-            figSTD, axSTD = plt.subplots()
-            noGraficar = False
-            for experimento in experimentos:
-                mejor = bd.obtenerMejoresEjecucionesSCP(instancia[0], mh[0], experimento[0])
-                print(f'Analizando experimento {experimento[0]} asociado a la instancia {instancia[0]} metaheuristica {mh[0]}')
-                for m in mejor:
-                    id                  = m[0]
-                    nombre_archivo      = m[2]
-                    archivo             = m[3]
-                    direccionDestiono = './Resultados/Transitorio/'+nombre_archivo+'.csv'
-                    # print("-------------------------------------------------------------------------------")
-                    util.writeTofile(archivo,direccionDestiono)                        
-                    data = pd.read_csv(direccionDestiono, on_bad_lines='skip')
-                    if len(data['iter']) == 501:
-                        iteraciones = data['iter']
-                    fitness     = data['fitness']
-                    rendimientos[f'{experimento[0]} - {instancia[0]}'] = fitness
-                        
-                    os.remove('./Resultados/Transitorio/'+nombre_archivo+'.csv')
-            for clave in rendimientos:
-                etiqueta = f'{clave.split("-")[1]}'
-                if mh[0] in clave and instancia[0] in clave and 'STD' in clave:        
-                    if len(rendimientos[clave]) == 501:
-                        axSTD.plot(iteraciones, rendimientos[clave], label=etiqueta)
-                    else: 
-                        noGraficar = True
-            if not noGraficar:
-                axSTD.set_title(f'Coverage {instancia[0]} - {mh[0]} - STD')
-                axSTD.set_ylabel("Fitness")
-                axSTD.set_xlabel("Iteration")
-                axSTD.legend(loc = 'upper right')
-                plt.savefig(f'{dirResultado}/Best/SCP/fitness_{instancia[0]}_{mh[0]}_STD.pdf')
-                plt.close('all')
-                print(f'Grafico de fitness realizado {instancia[0]} - {mh[0]} - STD')     
+    rendimientos    = dict()   
+    esquemas = ['STD','COM','ELIT']
+    for esquema in esquemas:
+        for mh in mhs:
+            if not os.path.exists(f'{dirResultado}/Best/SCP/{mh[0]}/{esquema}'):
+                os.makedirs(f'{dirResultado}/Best/SCP/{mh[0]}/{esquema}')
+            experimentos = bd.obtenerExperimentosEspecial('SCP', mh[0], esquema)
+            for instancia in instancias:
+                figSTD, axSTD = plt.subplots()
+                noGraficar = False
+                for experimento in experimentos:
+                    mejor = bd.obtenerMejoresEjecucionesSCP(instancia[0], mh[0], experimento[0])
+                    print(f'Analizando experimento {experimento[0]} asociado a la instancia {instancia[0]} metaheuristica {mh[0]}')
+                    for m in mejor:
+                        id                  = m[0]
+                        nombre_archivo      = m[2]
+                        archivo             = m[3]
+                        direccionDestiono = './Resultados/Transitorio/'+nombre_archivo+'.csv'
+                        # print("-------------------------------------------------------------------------------")
+                        util.writeTofile(archivo,direccionDestiono)                        
+                        data = pd.read_csv(direccionDestiono, on_bad_lines='skip')
+                        if len(data['iter']) == 501:
+                            iteraciones = data['iter']
+                        fitness     = data['fitness']
+                        rendimientos[f'{experimento[0]} - {instancia[0]}'] = fitness
+                            
+                        os.remove('./Resultados/Transitorio/'+nombre_archivo+'.csv')
+                for clave in rendimientos:
+                    etiqueta = f'{clave.split("-")[1]}'
+                    if mh[0] in clave and instancia[0] in clave and esquema in clave:        
+                        if len(rendimientos[clave]) == 501:
+                            axSTD.plot(iteraciones, rendimientos[clave], label=etiqueta)
+                        else: 
+                            noGraficar = True
+                if not noGraficar:
+                    axSTD.set_title(f'Coverage {instancia[0]} - {mh[0]} - {esquema}')
+                    axSTD.set_ylabel("Fitness")
+                    axSTD.set_xlabel("Iteration")
+                    axSTD.legend(loc = 'upper right')
+                    plt.savefig(f'{dirResultado}/Best/SCP/{mh[0]}/{esquema}/fitness_{instancia[0]}_{mh[0]}_{esquema}.pdf')
+                    plt.close('all')
+                    print(f'Grafico de fitness realizado {instancia[0]} - {mh[0]} - {esquema}')     
                 
-                
-    for mh in mhs:
-        experimentos = bd.obtenerExperimentosEspecial('SCP', mh[0], 'COM')
-        for instancia in instancias:
-            figSTD, axSTD = plt.subplots()
-            noGraficar = False
-            for experimento in experimentos:
-                mejor = bd.obtenerMejoresEjecucionesSCP(instancia[0], mh[0], experimento[0])
-                print(f'Analizando experimento {experimento[0]} asociado a la instancia {instancia[0]} metaheuristica {mh[0]}')
-                for m in mejor:
-                    id                  = m[0]
-                    nombre_archivo      = m[2]
-                    archivo             = m[3]
-                    direccionDestiono = './Resultados/Transitorio/'+nombre_archivo+'.csv'
-                    # print("-------------------------------------------------------------------------------")
-                    util.writeTofile(archivo,direccionDestiono)                        
-                    data = pd.read_csv(direccionDestiono, on_bad_lines='skip')
-                    if len(data['iter']) == 501:
-                        iteraciones = data['iter']
-                    fitness     = data['fitness']
-                    rendimientos[f'{experimento[0]} - {instancia[0]}'] = fitness
-                    
-                    os.remove('./Resultados/Transitorio/'+nombre_archivo+'.csv')
-            for clave in rendimientos:
-                etiqueta = f'{clave.split("-")[1]}'
-                if mh[0] in clave and instancia[0] in clave and 'COM' in clave:        
-                    if len(rendimientos[clave]) == 501:
-                        axSTD.plot(iteraciones, rendimientos[clave], label=etiqueta)
-                    else: 
-                        noGraficar = True
-            if not noGraficar:
-                axSTD.set_title(f'Coverage {instancia[0]} - {mh[0]} - COM')
-                axSTD.set_ylabel("Fitness")
-                axSTD.set_xlabel("Iteration")
-                axSTD.legend(loc = 'upper right')
-                plt.savefig(f'{dirResultado}/Best/SCP/fitness_{instancia[0]}_{mh[0]}_COM.pdf')
-                plt.close('all')
-                print(f'Grafico de fitness realizado {instancia[0]} - {mh[0]} - COM') 
-                
-    for mh in mhs:
-        experimentos = bd.obtenerExperimentosEspecial('SCP', mh[0], 'ELIT')
-        for instancia in instancias:
-            figSTD, axSTD = plt.subplots()
-            noGraficar = False
-            for experimento in experimentos:
-                mejor = bd.obtenerMejoresEjecucionesSCP(instancia[0], mh[0], experimento[0])
-                print(f'Analizando experimento {experimento[0]} asociado a la instancia {instancia[0]} metaheuristica {mh[0]}')
-                for m in mejor:
-                    id                  = m[0]
-                    nombre_archivo      = m[2]
-                    archivo             = m[3]
-                    direccionDestiono = './Resultados/Transitorio/'+nombre_archivo+'.csv'
-                    # print("-------------------------------------------------------------------------------")
-                    util.writeTofile(archivo,direccionDestiono)                        
-                    data = pd.read_csv(direccionDestiono, on_bad_lines='skip')
-                    if len(data['iter']) == 501:
-                        iteraciones = data['iter']
-                    fitness     = data['fitness']
-                    rendimientos[f'{experimento[0]} - {instancia[0]}'] = fitness
-                    
-                    os.remove('./Resultados/Transitorio/'+nombre_archivo+'.csv')
-            for clave in rendimientos:
-                etiqueta = f'{clave.split("-")[1]}'
-                if mh[0] in clave and instancia[0] in clave and 'ELIT' in clave:        
-                    if len(rendimientos[clave]) == 501:
-                        axSTD.plot(iteraciones, rendimientos[clave], label=etiqueta)
-                    else: 
-                        noGraficar = True
-            if not noGraficar:
-                axSTD.set_title(f'Coverage {instancia[0]} - {mh[0]} - ELIT')
-                axSTD.set_ylabel("Fitness")
-                axSTD.set_xlabel("Iteration")
-                axSTD.legend(loc = 'upper right')
-                plt.savefig(f'{dirResultado}/Best/SCP/fitness_{instancia[0]}_{mh[0]}_ELIT.pdf')
-                plt.close('all')
-                print(f'Grafico de fitness realizado {instancia[0]} - {mh[0]} - ELIT') 
-    
     
 if testEstadistico:
     for instancia in instancias:

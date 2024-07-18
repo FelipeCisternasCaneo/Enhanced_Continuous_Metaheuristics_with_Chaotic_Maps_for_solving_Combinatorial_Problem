@@ -1,7 +1,6 @@
 import sqlite3
 import os
 from Problem.SCP.problem import obtenerOptimo
-from Problem.KP.problem import obtenerOptimoKP
 from util import util
 
 class BD:
@@ -90,7 +89,6 @@ class BD:
         self.commit()
         
         self.insertarInstanciasSCP()
-        self.insertarInstanciasKP()
         
         self.desconectar()
     
@@ -126,22 +124,6 @@ class BD:
             tipoProblema = 'SCP'
             nombre = d.split(".")[0]
             optimo = obtenerOptimo(nombre)
-            param = ''
-            
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
-            
-        self.commit()
-        self.desconectar()
-        
-    def insertarInstanciasKP(self):
-        
-        self.conectar()
-        
-        data = os.listdir('./Problem/KP/Instances/')        
-        for d in data:
-            tipoProblema = 'KP'
-            nombre = d
-            optimo = obtenerOptimoKP(nombre)
             param = ''
             
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))

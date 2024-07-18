@@ -2,11 +2,9 @@ import numpy as np
 import os
 from Problem.SCP.problem import SCP
 from Metaheuristics.GWO import iterarGWO
-from Metaheuristics.PSA import iterarPSA
 from Metaheuristics.SCA import iterarSCA
 from Metaheuristics.WOA import iterarWOA
-from Metaheuristics.MFO import iterarMFO
-from Metaheuristics.GA import iterarGA
+from Metaheuristics.PSO import iterarPSO
 from Diversity.hussainDiversity import diversidadHussain
 from Diversity.XPLXTP import porcentajesXLPXPT
 import time
@@ -94,10 +92,6 @@ def solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, DS, repairType, param
     Best = poblacion[bestRowAux].copy()
     BestFitness = fitness[bestRowAux]
     
-    # PARA MFO
-    BestFitnessArray = fitness[solutionsRanking] 
-    bestSolutions = poblacion[solutionsRanking]
-    
     matrixBin = poblacion.copy()
     
     tiempoInicializacion2 = time.time()
@@ -126,13 +120,11 @@ def solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, DS, repairType, param
         f'0,{str(BestFitness)},{str(round(tiempoInicializacion2-tiempoInicializacion1,3))},{str(XPL)},{str(XPT)},{maxDiversidad}\n'
     )
     
+    bestPop = np.copy(poblacion)
+    
     for iter in range(0, maxIter):
         # obtengo mi tiempo inicial
         timerStart = time.time()
-        
-        if mh == "MFO":
-            for i in range(bestSolutions.__len__()):
-                BestFitnessArray[i] = instance.fitness(bestSolutions[i])
         
         # perturbo la poblacion con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
@@ -143,15 +135,8 @@ def solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, DS, repairType, param
             poblacion = iterarGWO(maxIter, iter, instance.getColumns(), poblacion.tolist(), fitness.tolist(), 'MIN')
         if mh == 'WOA':
             poblacion = iterarWOA(maxIter, iter, instance.getColumns(), poblacion.tolist(), Best.tolist())
-        if mh == 'PSA':
-            poblacion = iterarPSA(maxIter, iter, instance.getColumns(), poblacion.tolist(), Best.tolist())
-        if mh == "MFO":
-            poblacion, bestSolutions = iterarMFO(maxIter, iter, instance.getColumns(), len(poblacion), poblacion, bestSolutions, fitness, BestFitnessArray )
-        if mh == "GA":
-            
-            cross = float(param.split(";")[0].split(":")[1])
-            muta = float(param.split(";")[1].split(":")[1])
-            poblacion = iterarGA(poblacion.tolist(), fitness, cross, muta)
+        if mh == 'PSO':
+            poblacion = iterarPSO(maxIter, iter, instance.getColumns(), poblacion.tolist(), Best.tolist() ,bestPop.tolist())
         
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
         for i in range(poblacion.__len__()):
@@ -166,6 +151,10 @@ def solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, DS, repairType, param
                 
 
             fitness[i] = instance.fitness(poblacion[i])
+            
+            if mh == 'PSO':
+                if fitness[i] < instance.fitness(bestPop[i]):
+                    bestPop[i] = np.copy(poblacion[i])
 
 
         solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
