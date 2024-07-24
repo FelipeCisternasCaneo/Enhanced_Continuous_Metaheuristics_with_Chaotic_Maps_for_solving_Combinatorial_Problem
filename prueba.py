@@ -1,5 +1,13 @@
-from Problem.KP.problem import KP
-import numpy as np
+import os
+
+
+data = os.listdir('./Problem/SCP/Instances/')        
+for d in data:
+    # print(d)
+    nombre = d.split(".")[0]
+    nombre = f'{nombre[3:]}'
+    print(nombre)
+
 # import pandas as pd
 # from Problem.FS.Problem import FeatureSelection as fs
 
@@ -44,11 +52,11 @@ import numpy as np
 
 
 
-ds = 'COM'
+# ds = 'COM'
 
-separacion = ds.split("_")
+# separacion = ds.split("_")
 
-print(len(separacion))
+# print(len(separacion))
 
 
 

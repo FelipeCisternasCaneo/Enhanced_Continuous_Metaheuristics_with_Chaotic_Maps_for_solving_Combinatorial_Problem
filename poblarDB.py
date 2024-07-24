@@ -11,7 +11,7 @@ empatia = False
 mkp = False
 kp = False
 ml = False
-mhs = ['PSO','GWO']
+mhs = ['GWO']
 cantidad = 0
 
 DS_actions = [
@@ -40,17 +40,17 @@ paramsML = json.dumps({
 if scp:
     # poblar ejecuciones SCP
     instancias = bd.obtenerInstancias(f'''
-                                      "scpcyc06","scpcyc07","scpclr10","scpclr11","scp41","scp61","scpb1","scpnrf1"
+                                      "cyc06","clr10","clr11","41","u41","61","u61","51","u51"
                                       ''')
     iteraciones = 500
-    experimentos = 5
+    experimentos = 31
     poblacion = 20
     for instancia in instancias:
 
         for mh in mhs:
             binarizaciones = ['V3-STD','V3-STD_LOG','V3-STD_PIECE','V3-STD_SINE','V3-STD_SINGER','V3-STD_SINU','V3-STD_TENT','V3-STD_CIRCLE',
                               'V3-ELIT','V3-ELIT_LOG','V3-ELIT_PIECE','V3-ELIT_SINE','V3-ELIT_SINGER','V3-ELIT_SINU','V3-ELIT_TENT','V3-ELIT_CIRCLE']
-            # binarizaciones = ['V3-ELIT']
+            # binarizaciones = ['V3-ELIT_LOG']
             for binarizacion in binarizaciones:
                 
                 data = {}

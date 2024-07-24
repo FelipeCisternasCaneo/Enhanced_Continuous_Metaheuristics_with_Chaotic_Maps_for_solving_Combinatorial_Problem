@@ -170,13 +170,6 @@ class SCP:
             ,'scpnrh3':[62,59]
             ,'scpnrh4':[63,58]
             ,'scpnrh5':[64,55]
-            ,'scpcyc06':[65,60]
-            ,'scpcyc07':[66,144]
-            ,'scpcyc08':[67,344]
-            ,'scpclr10':[68,25]
-            ,'scpclr11':[69,23]
-            ,'scpclr12':[70,23]
-            ,'scpclr13':[71,23]
         }
 
         for nomInstancia in orden:
@@ -319,13 +312,6 @@ def obtenerOptimo(archivoInstancia):
         ,'scpnrh3':[62,59]
         ,'scpnrh4':[63,58]
         ,'scpnrh5':[64,55]
-        ,'scpcyc06':[65,60]
-        ,'scpcyc07':[66,144]
-        ,'scpcyc08':[67,344]
-        ,'scpclr10':[68,25]
-        ,'scpclr11':[69,23]
-        ,'scpclr12':[70,23]
-        ,'scpclr13':[71,23]
     }
 
     for nomInstancia in orden:

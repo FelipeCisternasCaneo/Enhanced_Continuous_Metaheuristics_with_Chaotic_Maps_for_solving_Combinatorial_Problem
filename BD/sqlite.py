@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from Problem.SCP.problem import obtenerOptimo
+from Problem.SCP.problem import obtenerOptimo 
+from Problem.USCP.problem import obtenerOptimoUSCP
 from util import util
 
 class BD:
@@ -89,6 +90,7 @@ class BD:
         self.commit()
         
         self.insertarInstanciasSCP()
+        self.insertarInstanciasUSCP()
         
         self.desconectar()
     
@@ -124,6 +126,29 @@ class BD:
             tipoProblema = 'SCP'
             nombre = d.split(".")[0]
             optimo = obtenerOptimo(nombre)
+            nombre = f'{nombre[3:]}'
+            param = ''
+            
+            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
+            
+        self.commit()
+        self.desconectar()
+        
+    def insertarInstanciasUSCP(self):
+        
+        self.conectar()
+        
+        data = os.listdir('./Problem/USCP/Instances/')        
+        for d in data:
+            
+            tipoProblema = 'USCP'
+            nombre = d.split(".")[0]
+            optimo = obtenerOptimoUSCP(nombre)
+            
+            if 'cyc' not in nombre and 'clr' not in nombre:
+                nombre = f'u{nombre[3:]}'
+            else:
+                nombre = f'{nombre[3:]}'
             param = ''
             
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))

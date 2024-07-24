@@ -1,5 +1,7 @@
 from Solver.solverSCP import solverSCP
 from Solver.solverSCP_ChaoticMaps import solverSCP_ChaoticMaps
+from Solver.solverUSCP import solverUSCP
+from Solver.solverUSCP_ChaoticMaps import solverUSCP_ChaoticMaps
 
 from BD.sqlite import BD
 import json
@@ -32,7 +34,6 @@ while len(data) > 0:
     print(datosInstancia)
     
     problema = datosInstancia[0][1]
-    instancia = datosInstancia[0][2]
     parametrosInstancia = datosInstancia[0][4]
     experimento = data[0][1]
     mh = data[0][2]
@@ -46,6 +47,7 @@ while len(data) > 0:
     
     if problema == 'SCP':
         bd.actualizarExperimento(id, 'ejecutando')
+        instancia = f'scp{datosInstancia[0][2]}'
         print("-------------------------------------------------------------------------------------------------------")
         print(f"Ejecutando el experimento: {experimento} - id: {str(id)}")
         print("-------------------------------------------------------------------------------------------------------")
@@ -61,6 +63,29 @@ while len(data) > 0:
             solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, ds, repair, parMH)
         else:
             solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
+            
+    if problema == 'USCP':
+        bd.actualizarExperimento(id, 'ejecutando')
+        if 'cyc' not in datosInstancia[0][2] and 'clr' not in datosInstancia[0][2]:
+            instancia = f'scp{datosInstancia[0][2][1:]}'
+        else:
+            instancia = f'scp{datosInstancia[0][2]}'
+        
+        print("-------------------------------------------------------------------------------------------------------")
+        print(f"Ejecutando el experimento: {experimento} - id: {str(id)}")
+        print("-------------------------------------------------------------------------------------------------------")
+        repair = parametrosMH.split(",")[3].split(":")[1]
+        ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[0])
+        ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[1])
+        
+        parMH = parametrosMH.split(",")[4]
+        
+        separacion = ds[1].split("_")
+        
+        if len(separacion) > 1:
+            solverUSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, ds, repair, parMH)
+        else:
+            solverUSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
         
     data = bd.obtenerExperimento()
     
