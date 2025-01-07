@@ -5,8 +5,8 @@ from Problem.USCP.problem import obtenerOptimoUSCP
 from util import util
 
 class BD:
-    def __init__(self):
-        self.__dataBase = 'BD/resultados.db'
+    def __init__(self, database='resultados.db'):
+        self.__dataBase = f'BD/{database}'
         self.__conexion = None
         self.__cursor   = None
 
@@ -252,6 +252,23 @@ class BD:
         self.desconectar()
         return data
     
+    def obtenerArchivoID(self, id):
+        self.conectar()
+        
+        cursor = self.getCursor()
+        cursor.execute(f''' 
+            select i.nombre, i.archivo, e.experimento
+            from iteraciones i
+            inner join experimentos e on i.fk_id_experimento = e.id_experimento  
+            where id_archivo = {id}
+        ''')
+        
+        data = cursor.fetchall()
+        
+        
+        self.desconectar()
+        return data
+    
     def obtenerMejoresArchivos(self, instancia, ml):
         self.conectar()
         
@@ -456,10 +473,9 @@ class BD:
         cursor = self.getCursor()
         cursor.execute(f''' 
                        
-                        select e.id_experimento , e.experimento, i.nombre , i.archivo , r.fitness, r.tiempoEjecucion  
+                        select e.id_experimento, r.fitness, r.tiempoEjecucion  
                         from resultados r 
                         inner join experimentos e on r.fk_id_experimento = e.id_experimento
-                        inner join iteraciones i on i.fk_id_experimento = e.id_experimento
                         inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
                         where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
                         
